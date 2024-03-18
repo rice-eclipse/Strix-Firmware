@@ -1,0 +1,6 @@
+../Core/Src/Drivers/ADXL375.c:10:9:ADXL375_Init	32	static
+../Core/Src/Drivers/ADXL375.c:70:9:ADXL375_ReadRegister	40	static
+../Core/Src/Drivers/ADXL375.c:86:9:ADXL375_WriteRegister	24	static
+../Core/Src/Drivers/ADXL375.c:105:9:ADXL375_Read	48	static
+../Core/Src/Drivers/ADXL375.c:134:9:ADXL375_ReadDMA	16	static
+../Core/Src/Drivers/ADXL375.c:155:6:ADXL375_ReadDMA_Complete	24	static

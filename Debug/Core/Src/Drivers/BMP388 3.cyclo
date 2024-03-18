@@ -1,0 +1,9 @@
+../Core/Src/Drivers/BMP388.c:8:9:BMP388_Init	2
+../Core/Src/Drivers/BMP388.c:58:9:BMP388_ReadRegister	2
+../Core/Src/Drivers/BMP388.c:75:9:BMP388_WriteRegister	2
+../Core/Src/Drivers/BMP388.c:92:9:BMP388_ReadCalibrationData	2
+../Core/Src/Drivers/BMP388.c:128:7:BMP388_CompensateTemperature	1
+../Core/Src/Drivers/BMP388.c:145:7:BMP388_CompensatePressure	1
+../Core/Src/Drivers/BMP388.c:184:9:BMP388_Read	1
+../Core/Src/Drivers/BMP388.c:211:9:BMP388_ReadDMA	2
+../Core/Src/Drivers/BMP388.c:231:6:BMP388_ReadDMA_Complete	1

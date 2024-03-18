@@ -1,0 +1,6 @@
+../Core/Src/Drivers/ADXL375.c:10:9:ADXL375_Init	2
+../Core/Src/Drivers/ADXL375.c:70:9:ADXL375_ReadRegister	2
+../Core/Src/Drivers/ADXL375.c:86:9:ADXL375_WriteRegister	2
+../Core/Src/Drivers/ADXL375.c:105:9:ADXL375_Read	1
+../Core/Src/Drivers/ADXL375.c:134:9:ADXL375_ReadDMA	2
+../Core/Src/Drivers/ADXL375.c:155:6:ADXL375_ReadDMA_Complete	1
