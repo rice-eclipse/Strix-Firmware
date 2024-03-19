@@ -8,18 +8,21 @@ C_SRCS += \
 ../Core/Src/Drivers/ADXL375.c \
 ../Core/Src/Drivers/BMI088.c \
 ../Core/Src/Drivers/BMP388.c \
+../Core/Src/Drivers/LIS3MDL.c \
 ../Core/Src/Drivers/W25Q128.c 
 
 OBJS += \
 ./Core/Src/Drivers/ADXL375.o \
 ./Core/Src/Drivers/BMI088.o \
 ./Core/Src/Drivers/BMP388.o \
+./Core/Src/Drivers/LIS3MDL.o \
 ./Core/Src/Drivers/W25Q128.o 
 
 C_DEPS += \
 ./Core/Src/Drivers/ADXL375.d \
 ./Core/Src/Drivers/BMI088.d \
 ./Core/Src/Drivers/BMP388.d \
+./Core/Src/Drivers/LIS3MDL.d \
 ./Core/Src/Drivers/W25Q128.d 
 
 
@@ -30,7 +33,7 @@ Core/Src/Drivers/%.o Core/Src/Drivers/%.su Core/Src/Drivers/%.cyclo: ../Core/Src
 clean: clean-Core-2f-Src-2f-Drivers
 
 clean-Core-2f-Src-2f-Drivers:
-	-$(RM) ./Core/Src/Drivers/ADXL375.cyclo ./Core/Src/Drivers/ADXL375.d ./Core/Src/Drivers/ADXL375.o ./Core/Src/Drivers/ADXL375.su ./Core/Src/Drivers/BMI088.cyclo ./Core/Src/Drivers/BMI088.d ./Core/Src/Drivers/BMI088.o ./Core/Src/Drivers/BMI088.su ./Core/Src/Drivers/BMP388.cyclo ./Core/Src/Drivers/BMP388.d ./Core/Src/Drivers/BMP388.o ./Core/Src/Drivers/BMP388.su ./Core/Src/Drivers/W25Q128.cyclo ./Core/Src/Drivers/W25Q128.d ./Core/Src/Drivers/W25Q128.o ./Core/Src/Drivers/W25Q128.su
+	-$(RM) ./Core/Src/Drivers/ADXL375.cyclo ./Core/Src/Drivers/ADXL375.d ./Core/Src/Drivers/ADXL375.o ./Core/Src/Drivers/ADXL375.su ./Core/Src/Drivers/BMI088.cyclo ./Core/Src/Drivers/BMI088.d ./Core/Src/Drivers/BMI088.o ./Core/Src/Drivers/BMI088.su ./Core/Src/Drivers/BMP388.cyclo ./Core/Src/Drivers/BMP388.d ./Core/Src/Drivers/BMP388.o ./Core/Src/Drivers/BMP388.su ./Core/Src/Drivers/LIS3MDL.cyclo ./Core/Src/Drivers/LIS3MDL.d ./Core/Src/Drivers/LIS3MDL.o ./Core/Src/Drivers/LIS3MDL.su ./Core/Src/Drivers/W25Q128.cyclo ./Core/Src/Drivers/W25Q128.d ./Core/Src/Drivers/W25Q128.o ./Core/Src/Drivers/W25Q128.su
 
 .PHONY: clean-Core-2f-Src-2f-Drivers
 

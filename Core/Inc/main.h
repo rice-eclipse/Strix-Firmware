@@ -87,6 +87,14 @@ void Error_Handler(void);
 #define Continuity_LED_F_GPIO_Port GPIOD
 #define Status_LED_Pin GPIO_PIN_14
 #define Status_LED_GPIO_Port GPIOD
+#define LIS3MDL_NCS_Pin GPIO_PIN_15
+#define LIS3MDL_NCS_GPIO_Port GPIOA
+#define LIS3MDL_Int_Pin GPIO_PIN_0
+#define LIS3MDL_Int_GPIO_Port GPIOD
+#define KX134_Int_Pin GPIO_PIN_1
+#define KX134_Int_GPIO_Port GPIOD
+#define KX134_NCS_Pin GPIO_PIN_2
+#define KX134_NCS_GPIO_Port GPIOD
 #define ADXL375_NCS_Pin GPIO_PIN_6
 #define ADXL375_NCS_GPIO_Port GPIOB
 #define ADXL375_Int_Pin GPIO_PIN_7
