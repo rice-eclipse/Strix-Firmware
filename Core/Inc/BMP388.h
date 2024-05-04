@@ -32,7 +32,7 @@ typedef struct {
 	uint8_t txBuf[7];
 	volatile uint8_t rxBuf[7];
 
-	/* x-y-z measurements */
+	/* measurements */
 	float pressure;
 	float temperature;
 

@@ -57,10 +57,6 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define BMP388_Int_Pin GPIO_PIN_2
-#define BMP388_Int_GPIO_Port GPIOE
-#define BMP388_NCS_Pin GPIO_PIN_3
-#define BMP388_NCS_GPIO_Port GPIOE
 #define Pyro_A_Trigger_Pin GPIO_PIN_2
 #define Pyro_A_Trigger_GPIO_Port GPIOB
 #define Pyro_B_Trigger_Pin GPIO_PIN_7
@@ -95,18 +91,18 @@ void Error_Handler(void);
 #define KX134_Int_GPIO_Port GPIOD
 #define KX134_NCS_Pin GPIO_PIN_2
 #define KX134_NCS_GPIO_Port GPIOD
-#define ADXL375_NCS_Pin GPIO_PIN_6
-#define ADXL375_NCS_GPIO_Port GPIOB
-#define ADXL375_Int_Pin GPIO_PIN_7
-#define ADXL375_Int_GPIO_Port GPIOB
+#define BMI088_Gyro_Int_Pin GPIO_PIN_6
+#define BMI088_Gyro_Int_GPIO_Port GPIOB
+#define BMI088_Accel_NCS_Pin GPIO_PIN_7
+#define BMI088_Accel_NCS_GPIO_Port GPIOB
 #define BMI088_Gyro_NCS_Pin GPIO_PIN_8
 #define BMI088_Gyro_NCS_GPIO_Port GPIOB
-#define BMI088_Gyro_Int_Pin GPIO_PIN_9
-#define BMI088_Gyro_Int_GPIO_Port GPIOB
-#define BMI088_Accel_NCS_Pin GPIO_PIN_0
-#define BMI088_Accel_NCS_GPIO_Port GPIOE
-#define BMI088_Accel_Int_Pin GPIO_PIN_1
-#define BMI088_Accel_Int_GPIO_Port GPIOE
+#define BMI088_Accel_Int_Pin GPIO_PIN_9
+#define BMI088_Accel_Int_GPIO_Port GPIOB
+#define BMP388_NCS_Pin GPIO_PIN_0
+#define BMP388_NCS_GPIO_Port GPIOE
+#define BMP388_Int_Pin GPIO_PIN_1
+#define BMP388_Int_GPIO_Port GPIOE
 
 /* USER CODE BEGIN Private defines */
 

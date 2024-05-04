@@ -36,17 +36,15 @@ uint8_t BMI088_Init(BMI088 *imu,
 	HAL_Delay(50);
 
 	/* Perform accelerometer soft reset */
-	status += BMI088_WriteAccRegister(imu, BMI_ACC_SOFTRESET, 0xB6);
-	HAL_Delay(50);
+	//status += BMI088_WriteAccRegister(imu, BMI_ACC_SOFTRESET, 0xB6);
+	//HAL_Delay(50);
 
 	/* Check chip ID */
-	uint8_t chipID;
-	status += BMI088_ReadAccRegister(imu, BMI_ACC_CHIP_ID, &chipID);
+	uint8_t chipID_accel;
+	status += BMI088_ReadAccRegister(imu, BMI_ACC_CHIP_ID, &chipID_accel);
 
-	if (chipID != 0x1E) {
-
+	if (chipID_accel != 0x1E) {
 		status+=50;
-
 	}
 	HAL_Delay(10);
 
@@ -91,11 +89,12 @@ uint8_t BMI088_Init(BMI088 *imu,
 	HAL_Delay(250);
 
 	/* Check chip ID */
-	status += BMI088_ReadGyrRegister(imu, BMI_GYR_CHIP_ID, &chipID);
+	uint8_t chipID_gyr;
+	status += BMI088_ReadGyrRegister(imu, BMI_GYR_CHIP_ID, &chipID_gyr);
 
-	if (chipID != 0x0F) {
+	if (chipID_gyr != 0x0F) {
 
-		status+=60;
+		status+=70;
 
 	}
 	HAL_Delay(10);
@@ -123,7 +122,8 @@ uint8_t BMI088_Init(BMI088 *imu,
 	/* Set gyroscope TX buffer for DMA */
 	imu->gyrTxBuf[0] = BMI_GYR_DATA | 0x80;
 
-	return status;
+	//return status;
+	return chipID_accel;
 
 }
 

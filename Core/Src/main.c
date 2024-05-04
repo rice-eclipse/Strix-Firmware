@@ -53,12 +53,10 @@ SPI_HandleTypeDef hspi3;
 /* USER CODE BEGIN PV */
 
 //USB transmission code
-char USBtxBuf[8];
-uint8_t count = 1;
-
+uint8_t buffer[64];
 
 //devices using hspi1
-//BMI088 bmi088;
+BMI088 bmi088;
 //BMP388 bmp388;
 
 //devices using hspi3
@@ -119,25 +117,20 @@ int main(void)
   	/* devices that use hspi1 */
 
   	/* Initialize BMI088 */
-  	/*
   	uint8_t bmi_status = BMI088_Init(&bmi088, &hspi1, BMI088_Accel_NCS_GPIO_Port, BMI088_Accel_NCS_Pin, BMI088_Gyro_NCS_GPIO_Port, BMI088_Gyro_NCS_Pin);
-  	if(bmi_status != 15) {
-  		HAL_GPIO_WritePin(Pyro_A_Trigger_GPIO_Port, Pyro_A_Trigger_Pin, GPIO_PIN_SET);
-  	}
-  	*/
+  	CDC_Transmit_FS(buffer, sprintf((char *)buffer, "Status of BMI088: %i\n", bmi_status));
+
 
   	/* Initialize BMP388 */
   	/*
   	uint8_t bmp_status = BMP388_Init(&bmp388, &hspi1, BMP388_NCS_GPIO_Port, BMP388_NCS_Pin);
-  	if (bmp_status != 7) {
-  		HAL_GPIO_WritePin(Pyro_B_Trigger_GPIO_Port, Pyro_B_Trigger_Pin, GPIO_PIN_SET);
-  	}
+  	CDC_Transmit_FS(buffer, sprintf((char *)buffer, "%i\n", bmp_status));
   	*/
 
+
   	/* devices that use hspi3 */
-  	/*
-    HAL_GPIO_WritePin(KX134_NCS_GPIO_Port, KX134_NCS_Pin, GPIO_PIN_SET);
-    */
+    uint8_t kx_status = KX134_Init(&kx134, &hspi3, KX134_NCS_GPIO_Port, KX134_NCS_Pin);
+  	CDC_Transmit_FS(buffer, sprintf((char *)buffer, "Status of KX134: %i\n", kx_status));
 
   	/* Initialize LIS3MDL */
   	/*
@@ -154,36 +147,42 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-
   while (1)
   {
+	uint8_t status;
+
+	//devices using hspi1
+	status = BMI088_ReadAccelerometer(&bmi088);
+
+	CDC_Transmit_FS(buffer, sprintf((char *)buffer, "m/s^2: x: %.3f   y: %.3f   z: %.3f\n",
+			bmi088.acc_mps2[0],bmi088.acc_mps2[1],bmi088.acc_mps2[2]));
+
+	status = BMI088_ReadGyroscope(&bmi088);
+
+	CDC_Transmit_FS(buffer, sprintf((char *)buffer, "rad/sec: x: %.3f   y: %.3f   z: %.3f\n",
+			bmi088.gyr_rps[0],bmi088.gyr_rps[1],bmi088.gyr_rps[2]));
 
 
-	sprintf(USBtxBuf, "%u\r\n", count);
-	count++;
+	/*
+	status = BMP388_Read(&bmp388);
 
-	if (count > 100) {
-		count = 1;
-	}
-
-	CDC_Transmit_FS((uint8_t *) USBtxBuf, strlen(USBtxBuf));
-
-	if (count == 50) {
-		HAL_GPIO_TogglePin(Pyro_F_Trigger_GPIO_Port, Pyro_F_Trigger_Pin);
-	}
+	CDC_Transmit_FS(buffer, sprintf((char *)buffer, "pressure: %.5f; temperature: %.5f\n",
+					bmp388.pressure,bmp388.temperature));
+	*/
 
 
+	//devices using hspi3
 
+	status = KX134_Read(&kx134);
 
-	//uint8_t status;
+	CDC_Transmit_FS(buffer, sprintf((char *)buffer, "m/s^2: x: %.3f   y: %.3f   z: %.3f\n",
+			kx134.acc_mps2[0],kx134.acc_mps2[1],kx134.acc_mps2[2]));
 
-	// devices using hspi1
-	//status = BMI088_ReadAccelerometer(&bmi088);
-	//status = BMI088_ReadGyroscope(&bmi088);
-	//status = BMP388_Read(&bmp388);
-	// devices using hspi3
-	//status = LIS3MDL_Read(&lis3mdl);
+	/*
+	status = LIS3MDL_Read(&lis3mdl);
+	*/
 
+	HAL_Delay(1000);
 
     /* USER CODE END WHILE */
 
@@ -332,20 +331,20 @@ static void MX_GPIO_Init(void)
 /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOE, BMP388_NCS_Pin|Pyro_B_Trigger_Pin|Pyro_C_Trigger_Pin|Pyro_D_Trigger_Pin
-                          |Pyro_E_Trigger_Pin|Pyro_F_Trigger_Pin|BMI088_Accel_NCS_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, Pyro_A_Trigger_Pin|Continuity_LED_D_Pin|Continuity_LED_C_Pin|BMI088_Gyro_Int_Pin
+                          |BMI088_Gyro_NCS_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, Pyro_A_Trigger_Pin|Continuity_LED_D_Pin|Continuity_LED_C_Pin|ADXL375_NCS_Pin
-                          |BMI088_Gyro_NCS_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOE, Pyro_B_Trigger_Pin|Pyro_C_Trigger_Pin|Pyro_D_Trigger_Pin|Pyro_E_Trigger_Pin
+                          |Pyro_F_Trigger_Pin|BMP388_NCS_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOD, Continuity_LED_B_Pin|Continuity_LED_A_Pin|Continuity_LED_E_Pin|Continuity_LED_F_Pin
@@ -354,29 +353,23 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LIS3MDL_NCS_GPIO_Port, LIS3MDL_NCS_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : BMP388_Int_Pin BMI088_Accel_Int_Pin */
-  GPIO_InitStruct.Pin = BMP388_Int_Pin|BMI088_Accel_Int_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : BMP388_NCS_Pin Pyro_B_Trigger_Pin Pyro_C_Trigger_Pin Pyro_D_Trigger_Pin
-                           Pyro_E_Trigger_Pin Pyro_F_Trigger_Pin BMI088_Accel_NCS_Pin */
-  GPIO_InitStruct.Pin = BMP388_NCS_Pin|Pyro_B_Trigger_Pin|Pyro_C_Trigger_Pin|Pyro_D_Trigger_Pin
-                          |Pyro_E_Trigger_Pin|Pyro_F_Trigger_Pin|BMI088_Accel_NCS_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : Pyro_A_Trigger_Pin Continuity_LED_D_Pin Continuity_LED_C_Pin ADXL375_NCS_Pin
+  /*Configure GPIO pins : Pyro_A_Trigger_Pin Continuity_LED_D_Pin Continuity_LED_C_Pin BMI088_Gyro_Int_Pin
                            BMI088_Gyro_NCS_Pin */
-  GPIO_InitStruct.Pin = Pyro_A_Trigger_Pin|Continuity_LED_D_Pin|Continuity_LED_C_Pin|ADXL375_NCS_Pin
+  GPIO_InitStruct.Pin = Pyro_A_Trigger_Pin|Continuity_LED_D_Pin|Continuity_LED_C_Pin|BMI088_Gyro_Int_Pin
                           |BMI088_Gyro_NCS_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : Pyro_B_Trigger_Pin Pyro_C_Trigger_Pin Pyro_D_Trigger_Pin Pyro_E_Trigger_Pin
+                           Pyro_F_Trigger_Pin BMP388_NCS_Pin */
+  GPIO_InitStruct.Pin = Pyro_B_Trigger_Pin|Pyro_C_Trigger_Pin|Pyro_D_Trigger_Pin|Pyro_E_Trigger_Pin
+                          |Pyro_F_Trigger_Pin|BMP388_NCS_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
   /*Configure GPIO pins : Continuity_LED_B_Pin Continuity_LED_A_Pin Continuity_LED_E_Pin Continuity_LED_F_Pin
                            Status_LED_Pin KX134_NCS_Pin */
@@ -400,11 +393,17 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : ADXL375_Int_Pin BMI088_Gyro_Int_Pin */
-  GPIO_InitStruct.Pin = ADXL375_Int_Pin|BMI088_Gyro_Int_Pin;
+  /*Configure GPIO pins : BMI088_Accel_NCS_Pin BMI088_Accel_Int_Pin */
+  GPIO_InitStruct.Pin = BMI088_Accel_NCS_Pin|BMI088_Accel_Int_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : BMP388_Int_Pin */
+  GPIO_InitStruct.Pin = BMP388_Int_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(BMP388_Int_GPIO_Port, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */

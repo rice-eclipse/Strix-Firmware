@@ -66,7 +66,7 @@ main-build: Strix\ Firmware.elf secondary-outputs
 
 # Tool invocations
 Strix\ Firmware.elf Strix\ Firmware.map: $(OBJS) $(USER_OBJS) /Users/max/Documents/Rice\ Eclipse/Flight\ Computer/Strix\ Firmware/STM32L476VETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "Strix Firmware.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/Users/max/Documents/Rice Eclipse/Flight Computer/Strix Firmware/STM32L476VETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Strix Firmware.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+	arm-none-eabi-gcc -o "Strix Firmware.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/Users/max/Documents/Rice Eclipse/Flight Computer/Strix Firmware/STM32L476VETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Strix Firmware.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
