@@ -27,7 +27,7 @@
 #include "BMI088.h"
 #include "BMP388.h"
 #include "LIS3MDL.h"
-//#include "KX134.h"
+#include "KX134.h"
 
 /* USER CODE END Includes */
 
@@ -61,7 +61,7 @@ BMI088 bmi088;
 
 //devices using hspi3
 //LIS3MDL lis3mdl;
-//KX134 kx134;
+KX134 kx134;
 
 
 /* USER CODE END PV */
@@ -120,6 +120,8 @@ int main(void)
   	uint8_t bmi_status = BMI088_Init(&bmi088, &hspi1, BMI088_Accel_NCS_GPIO_Port, BMI088_Accel_NCS_Pin, BMI088_Gyro_NCS_GPIO_Port, BMI088_Gyro_NCS_Pin);
   	CDC_Transmit_FS(buffer, sprintf((char *)buffer, "Status of BMI088: %i\n", bmi_status));
 
+  	HAL_Delay(500);
+
 
   	/* Initialize BMP388 */
   	/*
@@ -152,10 +154,13 @@ int main(void)
 	uint8_t status;
 
 	//devices using hspi1
+
+	/*
 	status = BMI088_ReadAccelerometer(&bmi088);
 
 	CDC_Transmit_FS(buffer, sprintf((char *)buffer, "m/s^2: x: %.3f   y: %.3f   z: %.3f\n",
 			bmi088.acc_mps2[0],bmi088.acc_mps2[1],bmi088.acc_mps2[2]));
+	*/
 
 	status = BMI088_ReadGyroscope(&bmi088);
 
@@ -182,6 +187,8 @@ int main(void)
 	status = LIS3MDL_Read(&lis3mdl);
 	*/
 
+
+	CDC_Transmit_FS(buffer, sprintf((char *)buffer, "\n\n\n"));
 	HAL_Delay(1000);
 
     /* USER CODE END WHILE */

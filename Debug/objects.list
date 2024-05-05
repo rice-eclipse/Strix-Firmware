@@ -1,6 +1,6 @@
-"./Core/Src/Drivers/ADXL375.o"
 "./Core/Src/Drivers/BMI088.o"
 "./Core/Src/Drivers/BMP388.o"
+"./Core/Src/Drivers/KX134.o"
 "./Core/Src/Drivers/LIS3MDL.o"
 "./Core/Src/Drivers/W25Q128.o"
 "./Core/Src/main.o"

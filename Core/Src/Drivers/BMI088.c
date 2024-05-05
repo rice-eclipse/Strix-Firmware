@@ -123,7 +123,7 @@ uint8_t BMI088_Init(BMI088 *imu,
 	imu->gyrTxBuf[0] = BMI_GYR_DATA | 0x80;
 
 	//return status;
-	return chipID_accel;
+	return status;
 
 }
 

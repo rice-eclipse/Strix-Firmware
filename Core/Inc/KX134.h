@@ -51,7 +51,7 @@ typedef struct {
  */
 uint8_t KX134_Init(KX134 *imu,
 				 SPI_HandleTypeDef *spiHandle,
-				 GPIO_TypeDef *csPinBank, uint16_t csPin,);
+				 GPIO_TypeDef *csPinBank, uint16_t csPin);
 
 /*
  *
@@ -73,8 +73,8 @@ uint8_t KX134_Read(KX134 *imu);
  * DMA
  *
  */
-uint8_t BMI088_ReadAccelerometerDMA(KX134 *imu);
-void 	BMI088_ReadAccelerometerDMA_Complete(KX134 *imu);
+uint8_t KX134_ReadAccelerometerDMA(KX134 *imu);
+void 	KX134_ReadAccelerometerDMA_Complete(KX134 *imu);
 
 #endif
 
