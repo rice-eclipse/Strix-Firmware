@@ -18,7 +18,10 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "quadspi.h"
+#include "spi.h"
 #include "usb_device.h"
+#include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -38,7 +41,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define DATA_RECORDING_LENGTH  0x400000 // 4MByte = 16 Bytes per data write * 400 Hz * ~10 minutes
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -47,13 +50,31 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-SPI_HandleTypeDef hspi1;
-SPI_HandleTypeDef hspi3;
 
 /* USER CODE BEGIN PV */
 
 //USB transmission code
-uint8_t buffer[64];
+uint8_t txBuffer[64];
+uint8_t rxBuffer[64];
+uint32_t txDataTransmitTick;
+uint8_t usbStatus;
+/*define the status of the USB transmission--
+ * 		0 is nothing
+ * 		1 is waiting for a recording choice
+ * 		2 is waiting for confirmation to clear flash
+ * 		3 is sending data ticks
+ */
+
+//QSPI Memory code
+uint8_t flashWriteBuffer[65]; //because sprintf sucks
+uint8_t flashReadBuffer[64];
+uint8_t config[16]; //this is to store the configuration right at the beginning of the program
+uint32_t writeHead; //to store how many recordings we've made
+uint8_t recordingData;
+
+//status LED and Buzzer code
+uint32_t ledTick;
+uint16_t ledTimeout;
 
 //devices using hspi1
 BMI088 bmi088;
@@ -61,16 +82,13 @@ BMI088 bmi088;
 
 //devices using hspi3
 //LIS3MDL lis3mdl;
-KX134 kx134;
+//KX134 kx134;
 
 
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-static void MX_GPIO_Init(void);
-static void MX_SPI1_Init(void);
-static void MX_SPI3_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -111,36 +129,110 @@ int main(void)
   MX_SPI1_Init();
   MX_USB_DEVICE_Init();
   MX_SPI3_Init();
+  MX_QUADSPI_Init();
   /* USER CODE BEGIN 2 */
 
+  /*
+   *
+   * SEND STARTING COMMUNICATION TO LAPTOP
+   *
+   *
+   */
 
-  	/* devices that use hspi1 */
+  HAL_Delay(3000);
 
-  	/* Initialize BMI088 */
-  	uint8_t bmi_status = BMI088_Init(&bmi088, &hspi1, BMI088_Accel_NCS_GPIO_Port, BMI088_Accel_NCS_Pin, BMI088_Gyro_NCS_GPIO_Port, BMI088_Gyro_NCS_Pin);
-  	CDC_Transmit_FS(buffer, sprintf((char *)buffer, "Status of BMI088: %i\n", bmi_status));
-
-  	HAL_Delay(500);
-
-
-  	/* Initialize BMP388 */
-  	/*
-  	uint8_t bmp_status = BMP388_Init(&bmp388, &hspi1, BMP388_NCS_GPIO_Port, BMP388_NCS_Pin);
-  	CDC_Transmit_FS(buffer, sprintf((char *)buffer, "%i\n", bmp_status));
-  	*/
+  CDC_Transmit_FS(txBuffer, sprintf((char *)txBuffer, "\n# ------------------------------ \n#\n#\n#\n#\n"));
+  HAL_Delay(1); //this is a shitty fucking solution but whatever I'm not getting paid
+  CDC_Transmit_FS(txBuffer, sprintf((char *)txBuffer, "# StrixFlight v0.0\n#\t\t\tRunning on Strix v3.0 \n#\n#\n"));
+  HAL_Delay(1);
+  CDC_Transmit_FS(txBuffer, sprintf((char *)txBuffer, "# ------------------------------ \n# Initializing sensors...\n"));
+  HAL_Delay(1);
 
 
-  	/* devices that use hspi3 */
-    uint8_t kx_status = KX134_Init(&kx134, &hspi3, KX134_NCS_GPIO_Port, KX134_NCS_Pin);
-  	CDC_Transmit_FS(buffer, sprintf((char *)buffer, "Status of KX134: %i\n", kx_status));
+  /*
+   *
+   * INITIALIZE SENSORS
+   *
+   *
+   */
 
-  	/* Initialize LIS3MDL */
-  	/*
-	uint8_t lis3mdl_status = LIS3MDL_Init(&lis3mdl, &hspi3, LIS3MDL_NCS_GPIO_Port, LIS3MDL_NCS_Pin);
-	if(lis3mdl_status != 4) {
-		HAL_GPIO_WritePin(Pyro_C_Trigger_GPIO_Port, Pyro_C_Trigger_Pin, GPIO_PIN_SET);
-	}
-	*/
+  /*
+   * devices that use hspi1
+   */
+
+  /* Initialize BMI088 */
+  uint8_t bmi_status = BMI088_Init(&bmi088, &hspi1, BMI088_Accel_NCS_GPIO_Port, BMI088_Accel_NCS_Pin, BMI088_Gyro_NCS_GPIO_Port, BMI088_Gyro_NCS_Pin);
+
+  CDC_Transmit_FS(txBuffer, sprintf((char *)txBuffer, "#\t\tStatus of BMI088: %i\n", bmi_status));
+  HAL_Delay(1);
+
+  /* Initialize BMP388 */
+  /*
+  uint8_t bmp_status = BMP388_Init(&bmp388, &hspi1, BMP388_NCS_GPIO_Port, BMP388_NCS_Pin);
+  CDC_Transmit_FS(buffer, sprintf((char *)txBuffer, "%i\n", bmp_status));
+  */
+
+  /*
+   * devices that use hspi3
+   */
+  /*
+  uint8_t kx_status = KX134_Init(&kx134, &hspi3, KX134_NCS_GPIO_Port, KX134_NCS_Pin);
+  CDC_Transmit_FS(buffer, sprintf((char *)txBuffer, "Status of KX134: %i\n", kx_status));
+  */
+
+  /* Initialize LIS3MDL */
+  /*
+  uint8_t lis3mdl_status = LIS3MDL_Init(&lis3mdl, &hspi3, LIS3MDL_NCS_GPIO_Port, LIS3MDL_NCS_Pin);
+  if(lis3mdl_status != 4) {
+  	  HAL_GPIO_WritePin(Pyro_C_Trigger_GPIO_Port, Pyro_C_Trigger_Pin, GPIO_PIN_SET);
+  }
+  */
+
+  CDC_Transmit_FS(txBuffer, sprintf((char *)txBuffer, "# Finished Sensor Initialization\n"));
+  HAL_Delay(1);
+
+  /*
+   *
+   * QSPI Memory Status
+   *
+   */
+  CDC_Transmit_FS(txBuffer, sprintf((char *)txBuffer, "# Reading Status from Flash Memory\n"));
+  HAL_Delay(10);
+  if (CSP_QUADSPI_Init() != HAL_OK) {
+	  CDC_Transmit_FS(txBuffer, sprintf((char *)txBuffer, "#\t\tError Configuring QSPI Flash Chip:\n#\t\t\tW25Q128JVSIQ\n#\n"));
+	  HAL_Delay(1);
+  }
+
+  //get the first 64 bytes, which hold configuration information
+  CSP_QSPI_Read(flashReadBuffer, 0, 16);
+
+  //copy the configuration into the configuration array
+  memcpy(&config, &flashReadBuffer, 16);
+
+  //read the number of recordings currently on the chip, and write to the USB port
+  CDC_Transmit_FS(txBuffer, sprintf((char *)txBuffer, "# Number of Recordings: %i out of 4 possible\n", config[0]));
+  HAL_Delay(1);
+
+  /*
+   * TELL THE USER HOW TO COMMUNICATE
+   */
+  CDC_Transmit_FS(txBuffer, sprintf((char *)txBuffer, "#\n#\n#\t1 to test USB functionality\n"));
+  HAL_Delay(1);
+  CDC_Transmit_FS(txBuffer, sprintf((char *)txBuffer, "#\t2 to access a recording\n"));
+  HAL_Delay(1);
+  CDC_Transmit_FS(txBuffer, sprintf((char *)txBuffer, "#\t3 to delete data (confirmation required)\n"));
+  HAL_Delay(1);
+  CDC_Transmit_FS(txBuffer, sprintf((char *)txBuffer, "#\t4 to toggle live sensor data reporting\n"));
+  HAL_Delay(1);
+
+  //set the usbStatus to 0 to confirm nothing has been requested yet
+  usbStatus = 0;
+  //set the ledTimeout to 500ms for nominal state
+  ledTimeout = 500;
+  //set the writeHead to 256 bc there hasn't been any data recorded, but the first 256 bytes are reserved for config
+  writeHead = 256;
+  //set recordingData to 0 bc we haven't detected a launch yet
+  recordingData = 0;
 
 
 
@@ -151,45 +243,193 @@ int main(void)
 
   while (1)
   {
-	uint8_t status;
+	/*
+	 *
+	 * COMMUNICATION WITH HOST COMPUTER (IF CONNECTED VIA USB)
+	 *
+	 *
+	 */
 
-	//devices using hspi1
+	//check if there are any commands from the user
+	if (rxBuffer[0] != 0) {
+		if (usbStatus == 0 || usbStatus == 3) {
+			//check what was sent
+			if (rxBuffer[0] == '1') {
+				//usb transmission test
+				CDC_Transmit_FS(txBuffer, sprintf((char *)txBuffer, "USB transmission confirmed functional"));
+			}
+			if (rxBuffer[0] == '2') {
+				//check status of the flash memory chip
+				CDC_Transmit_FS(txBuffer, sprintf((char *)txBuffer, "Getting Flash Memory Data"));
+				if (config[0] == 1) {
+					CDC_Transmit_FS(txBuffer, sprintf((char *)txBuffer, "There are no recordings to access"));
+				} else {
+					CDC_Transmit_FS(txBuffer, sprintf((char *)txBuffer, "Choose one of the %i recordings", config[0]));
+				}
+			}
+			if (rxBuffer[0] == '3') {
+				//send the confirmation message and change current state
+				CDC_Transmit_FS(txBuffer, sprintf((char *)txBuffer, "You have requested to delete all flight recordings"));
+				CDC_Transmit_FS(txBuffer, sprintf((char *)txBuffer, "\t\t\tEnter 'yes' to proceed"));
+				ledTimeout = 250;
+				usbStatus = 2;
+			}
+			if (rxBuffer[0] == '4') {
+				if (usbStatus != 4) {
+					CDC_Transmit_FS(txBuffer, sprintf((char *)txBuffer, "Starting Data Transmission"));
+					usbStatus = 3;
+				} else {
+					CDC_Transmit_FS(txBuffer, sprintf((char *)txBuffer, "Stopping Data Transmission"));
+					usbStatus = 0;
+				}
+			}
+		} else if (usbStatus == 1) {
+			//the number that was transmitted must be the desired recording
+			if (rxBuffer[0] > config[0]) {
+				CDC_Transmit_FS(txBuffer, sprintf((char *)txBuffer, "Invalid Number Entered"));
+			}
+			//report the desired results...
+			//calculate starting address
+			uint32_t start_address = DATA_RECORDING_LENGTH * rxBuffer[0] + 256; //add 256 b.c. the first page is reserved for config
+			uint32_t address = start_address;
+			//read data page by page and transmit through serial port
+			do {
+
+				address+=256;
+			} while (address < start_address+DATA_RECORDING_LENGTH);
+
+			usbStatus = 0;
+			ledTimeout = 500;
+		} else if (usbStatus == 2) {
+			//check if we have confirmation to delete the entire chip
+			if (rxBuffer[0] == 'y' && rxBuffer[1] == 'e' && rxBuffer[2] == 's') {
+				CDC_Transmit_FS(txBuffer, sprintf((char *)txBuffer, "Deleting entire flash chip and rewriting config"));
+				//now we actually have to do it
+				if (CSP_QSPI_Erase_Chip() != HAL_OK) {
+					CDC_Transmit_FS(txBuffer, sprintf((char *)txBuffer, "Error while deleting data"));
+				}
+				//copy over the config array (64 bytes)
+				memcpy (flashWriteBuffer, config, 64);
+				if (CSP_QSPI_WriteMemory(flashWriteBuffer, 0, 64) != HAL_OK) {
+					CDC_Transmit_FS(txBuffer, sprintf((char *)txBuffer, "Error while copying config data"));
+				}
+				//reset the counter of how many flights have been recorded
+				CSP_QSPI_WriteMemory((uint8_t)0, 0, 1);
+			} else {
+				CDC_Transmit_FS(txBuffer, sprintf((char *)txBuffer, "Exit Confirmed"));
+			}
+			usbStatus = 0;
+			ledTimeout = 500;
+		}
+		//reset the rxBuffer so we don't accidentally do things multiple times
+		memset (rxBuffer, '\0', 64);
+	}
+
+	//check if it's time to transmit the next data tick yet
+	if (HAL_GetTick() > txDataTransmitTick + 5000 && usbStatus == 3) {
+		//update the last time data was transmitted
+		txDataTransmitTick = HAL_GetTick();
+
+		//transmit the current data from the sensor structures
+		CDC_Transmit_FS(txBuffer, sprintf((char *)txBuffer, "deg/sec: x: %.3f   y: %.3f   z: %.3f\n",
+					bmi088.gyr_rps[0],bmi088.gyr_rps[1],bmi088.gyr_rps[2]));
+		//CDC_Transmit_FS(buffer, sprintf((char *)txBuffer, "BMI m/s^2: x: %.3f   y: %.3f   z: %.3f\n", bmi088.acc_mps2[0],bmi088.acc_mps2[1],bmi088.acc_mps2[2]));
+		//CDC_Transmit_FS(buffer, sprintf((char *)txBuffer, "Pressure: %.5f; Temperature: %.5f\n", bmp388.pressure,bmp388.temperature));
+		//CDC_Transmit_FS(buffer, sprintf((char *)txBuffer, "KX134 m/s^2: x: %.3f   y: %.3f   z: %.3f\n", kx134.acc_mps2[0],kx134.acc_mps2[1],kx134.acc_mps2[2]));
+	}
 
 	/*
-	status = BMI088_ReadAccelerometer(&bmi088);
-
-	CDC_Transmit_FS(buffer, sprintf((char *)buffer, "m/s^2: x: %.3f   y: %.3f   z: %.3f\n",
-			bmi088.acc_mps2[0],bmi088.acc_mps2[1],bmi088.acc_mps2[2]));
-	*/
-
-	status = BMI088_ReadGyroscope(&bmi088);
-
-	CDC_Transmit_FS(buffer, sprintf((char *)buffer, "rad/sec: x: %.3f   y: %.3f   z: %.3f\n",
-			bmi088.gyr_rps[0],bmi088.gyr_rps[1],bmi088.gyr_rps[2]));
-
+	 *
+	 * COMMUNICATION WITH SENSORS
+	 *
+	 *
+	 */
 
 	/*
-	status = BMP388_Read(&bmp388);
-
-	CDC_Transmit_FS(buffer, sprintf((char *)buffer, "pressure: %.5f; temperature: %.5f\n",
-					bmp388.pressure,bmp388.temperature));
-	*/
-
-
-	//devices using hspi3
-
-	status = KX134_Read(&kx134);
-
-	CDC_Transmit_FS(buffer, sprintf((char *)buffer, "m/s^2: x: %.3f   y: %.3f   z: %.3f\n",
-			kx134.acc_mps2[0],kx134.acc_mps2[1],kx134.acc_mps2[2]));
+	 * devices using hspi1
+	 */
+	//BMI088_ReadAccelerometer(&bmi088);
+	BMI088_ReadGyroscope(&bmi088);
+	//BMP388_Read(&bmp388);
 
 	/*
-	status = LIS3MDL_Read(&lis3mdl);
-	*/
+	 *devices using hspi3
+	 */
+	//KX134_Read(&kx134);
+	//LIS3MDL_Read(&lis3mdl);
 
+	/*
+	 *
+	 * DATA RECORDING
+	 *
+	 *
+	 */
 
-	CDC_Transmit_FS(buffer, sprintf((char *)buffer, "\n\n\n"));
-	HAL_Delay(1000);
+	if (recordingData == 1) {
+		//store data from the gyroscope into the first 64 bytes of the flashWriteBuffer (bc I'm lazy and sprintf sucks so its actually 65 bytes)
+		uint8_t *timeArray;
+		uint32_t time = HAL_GetTick();
+		timeArray = (uint8_t*)(&time);
+		uint8_t *xarray;
+		xarray = (uint8_t*)(&bmi088.gyr_rps[0]);
+		uint8_t *yarray;
+		yarray = (uint8_t*)(&bmi088.gyr_rps[1]);
+		uint8_t *zarray;
+		zarray = (uint8_t*)(&bmi088.gyr_rps[2]);
+
+		for (uint8_t i = 0; i < 4; i++) {
+			flashWriteBuffer[writeHead % 64] = timeArray[i];
+			writeHead++;
+		}
+		for (uint8_t i = 0; i < 4; i++) {
+			flashWriteBuffer[writeHead % 64] = xarray[i];
+			writeHead++;
+		}
+		for (uint8_t i = 0; i < 4; i++) {
+			flashWriteBuffer[writeHead % 64] = yarray[i];
+			writeHead++;
+		}
+		for (uint8_t i = 0; i < 4; i++) {
+			flashWriteBuffer[writeHead % 64] = zarray[i];
+			writeHead++;
+		}
+
+		//check if we should write data to the flash chip
+		if (writeHead % 64 == 0) {
+			//write the data from flashWriteBuffer
+			CSP_QSPI_WriteMemory(flashWriteBuffer, writeHead, 64);
+		}
+		if ((writeHead - 256) % DATA_RECORDING_LENGTH == 0 || writeHead > 0x1000000) {
+			//if we reached the end of the data recording length or the chip, turn off the function to record data
+			recordingData = 0;
+		}
+	} else {
+		if (bmi088.gyr_rps[0] > 1.f) {
+			//if we detect movement, check if we haven't already recorded a flight
+			//get the current config information
+			CSP_QSPI_Read(flashReadBuffer, 0, 16);
+			if (flashReadBuffer[0] == config[0]) {
+				recordingData = 1;
+				flashWriteBuffer[0] = config[0]+1;
+				//update the status inside the config bytes in the flash chip
+				CSP_QSPI_WriteMemory(flashWriteBuffer, 0, 1);
+			}
+		}
+	}
+
+	/*
+	 *
+	 * LED AND BUZZER FEEDBACK
+	 *
+	 *
+	 */
+	if (HAL_GetTick() > ledTick + ledTimeout) {
+		ledTick = HAL_GetTick();
+		HAL_GPIO_TogglePin(Status_LED_GPIO_Port, Status_LED_Pin);
+		if (recordingData == 1) {
+			HAL_GPIO_TogglePin(Continuity_LED_A_GPIO_Port, Continuity_LED_A_Pin);
+		}
+	}
 
     /* USER CODE END WHILE */
 
@@ -244,176 +484,6 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-}
-
-/**
-  * @brief SPI1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_SPI1_Init(void)
-{
-
-  /* USER CODE BEGIN SPI1_Init 0 */
-
-  /* USER CODE END SPI1_Init 0 */
-
-  /* USER CODE BEGIN SPI1_Init 1 */
-
-  /* USER CODE END SPI1_Init 1 */
-  /* SPI1 parameter configuration*/
-  hspi1.Instance = SPI1;
-  hspi1.Init.Mode = SPI_MODE_MASTER;
-  hspi1.Init.Direction = SPI_DIRECTION_2LINES;
-  hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
-  hspi1.Init.CLKPolarity = SPI_POLARITY_HIGH;
-  hspi1.Init.CLKPhase = SPI_PHASE_2EDGE;
-  hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
-  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
-  hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
-  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-  hspi1.Init.CRCPolynomial = 7;
-  hspi1.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
-  hspi1.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
-  if (HAL_SPI_Init(&hspi1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN SPI1_Init 2 */
-
-  /* USER CODE END SPI1_Init 2 */
-
-}
-
-/**
-  * @brief SPI3 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_SPI3_Init(void)
-{
-
-  /* USER CODE BEGIN SPI3_Init 0 */
-
-  /* USER CODE END SPI3_Init 0 */
-
-  /* USER CODE BEGIN SPI3_Init 1 */
-
-  /* USER CODE END SPI3_Init 1 */
-  /* SPI3 parameter configuration*/
-  hspi3.Instance = SPI3;
-  hspi3.Init.Mode = SPI_MODE_MASTER;
-  hspi3.Init.Direction = SPI_DIRECTION_2LINES;
-  hspi3.Init.DataSize = SPI_DATASIZE_8BIT;
-  hspi3.Init.CLKPolarity = SPI_POLARITY_HIGH;
-  hspi3.Init.CLKPhase = SPI_PHASE_2EDGE;
-  hspi3.Init.NSS = SPI_NSS_SOFT;
-  hspi3.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
-  hspi3.Init.FirstBit = SPI_FIRSTBIT_MSB;
-  hspi3.Init.TIMode = SPI_TIMODE_DISABLE;
-  hspi3.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-  hspi3.Init.CRCPolynomial = 7;
-  hspi3.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
-  hspi3.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
-  if (HAL_SPI_Init(&hspi3) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN SPI3_Init 2 */
-
-  /* USER CODE END SPI3_Init 2 */
-
-}
-
-/**
-  * @brief GPIO Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_GPIO_Init(void)
-{
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
-/* USER CODE BEGIN MX_GPIO_Init_1 */
-/* USER CODE END MX_GPIO_Init_1 */
-
-  /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOH_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
-  __HAL_RCC_GPIOE_CLK_ENABLE();
-  __HAL_RCC_GPIOD_CLK_ENABLE();
-  __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOC_CLK_ENABLE();
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, Pyro_A_Trigger_Pin|Continuity_LED_D_Pin|Continuity_LED_C_Pin|BMI088_Gyro_Int_Pin
-                          |BMI088_Gyro_NCS_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOE, Pyro_B_Trigger_Pin|Pyro_C_Trigger_Pin|Pyro_D_Trigger_Pin|Pyro_E_Trigger_Pin
-                          |Pyro_F_Trigger_Pin|BMP388_NCS_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOD, Continuity_LED_B_Pin|Continuity_LED_A_Pin|Continuity_LED_E_Pin|Continuity_LED_F_Pin
-                          |Status_LED_Pin|KX134_NCS_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LIS3MDL_NCS_GPIO_Port, LIS3MDL_NCS_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pins : Pyro_A_Trigger_Pin Continuity_LED_D_Pin Continuity_LED_C_Pin BMI088_Gyro_Int_Pin
-                           BMI088_Gyro_NCS_Pin */
-  GPIO_InitStruct.Pin = Pyro_A_Trigger_Pin|Continuity_LED_D_Pin|Continuity_LED_C_Pin|BMI088_Gyro_Int_Pin
-                          |BMI088_Gyro_NCS_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : Pyro_B_Trigger_Pin Pyro_C_Trigger_Pin Pyro_D_Trigger_Pin Pyro_E_Trigger_Pin
-                           Pyro_F_Trigger_Pin BMP388_NCS_Pin */
-  GPIO_InitStruct.Pin = Pyro_B_Trigger_Pin|Pyro_C_Trigger_Pin|Pyro_D_Trigger_Pin|Pyro_E_Trigger_Pin
-                          |Pyro_F_Trigger_Pin|BMP388_NCS_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : Continuity_LED_B_Pin Continuity_LED_A_Pin Continuity_LED_E_Pin Continuity_LED_F_Pin
-                           Status_LED_Pin KX134_NCS_Pin */
-  GPIO_InitStruct.Pin = Continuity_LED_B_Pin|Continuity_LED_A_Pin|Continuity_LED_E_Pin|Continuity_LED_F_Pin
-                          |Status_LED_Pin|KX134_NCS_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : LIS3MDL_NCS_Pin */
-  GPIO_InitStruct.Pin = LIS3MDL_NCS_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(LIS3MDL_NCS_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : LIS3MDL_Int_Pin KX134_Int_Pin */
-  GPIO_InitStruct.Pin = LIS3MDL_Int_Pin|KX134_Int_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : BMI088_Accel_NCS_Pin BMI088_Accel_Int_Pin */
-  GPIO_InitStruct.Pin = BMI088_Accel_NCS_Pin|BMI088_Accel_Int_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : BMP388_Int_Pin */
-  GPIO_InitStruct.Pin = BMP388_Int_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(BMP388_Int_GPIO_Port, &GPIO_InitStruct);
-
-/* USER CODE BEGIN MX_GPIO_Init_2 */
-/* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */

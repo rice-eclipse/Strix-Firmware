@@ -1,0 +1,14 @@
+../Core/Src/quadspi.c:33:6:MX_QUADSPI_Init	8	static
+../Core/Src/quadspi.c:60:6:HAL_QSPI_MspInit	56	static
+../Core/Src/quadspi.c:110:6:HAL_QSPI_MspDeInit	16	static
+../Core/Src/quadspi.c:144:9:CSP_QUADSPI_Init	8	static
+../Core/Src/quadspi.c:179:9:CSP_QSPI_Erase_Chip	64	static
+../Core/Src/quadspi.c:210:9:QSPI_AutoPollingMemReady	96	static
+../Core/Src/quadspi.c:240:16:QSPI_WriteEnable	96	static
+../Core/Src/quadspi.c:281:9:QSPI_Configuration	72	static
+../Core/Src/quadspi.c:372:9:CSP_QSPI_EraseBlock	80	static
+../Core/Src/quadspi.c:402:9:CSP_QSPI_EraseSector	72	static
+../Core/Src/quadspi.c:444:9:CSP_QSPI_WriteMemory	96	static
+../Core/Src/quadspi.c:558:9:CSP_QSPI_EnableMemoryMappedMode	72	static
+../Core/Src/quadspi.c:590:9:QSPI_ResetChip	72	static,ignoring_inline_asm
+../Core/Src/quadspi.c:634:9:CSP_QSPI_Read	80	static

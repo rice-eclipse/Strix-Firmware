@@ -31,7 +31,7 @@
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-
+extern uint8_t rxBuffer[64];
 /* USER CODE END PV */
 
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
@@ -263,7 +263,16 @@ static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
   /* USER CODE BEGIN 6 */
   USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
   USBD_CDC_ReceivePacket(&hUsbDeviceFS);
+  uint8_t len = (uint8_t) *Len;
+  memset (rxBuffer, '\0', 64);
+  memcpy (rxBuffer, Buf, len);
+  memset (Buf, '\0', len);
   return (USBD_OK);
+
+
+  //if we're still using this shit after 2024 is over.....
+  //				-Max
+
   /* USER CODE END 6 */
 }
 

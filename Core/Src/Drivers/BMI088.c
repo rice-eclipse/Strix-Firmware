@@ -100,10 +100,10 @@ uint8_t BMI088_Init(BMI088 *imu,
 	HAL_Delay(10);
 
 	/* Configure gyroscope */
-	status += BMI088_WriteGyrRegister(imu, BMI_GYR_RANGE, 0x01); /* +- 1000 deg/s */
+	status += BMI088_WriteGyrRegister(imu, BMI_GYR_RANGE, 0x00); /* +- 2000 deg/s */
 	HAL_Delay(10);
 
-	status += BMI088_WriteGyrRegister(imu, BMI_GYR_BANDWIDTH, 0x07); /* ODR = 100 Hz, Filter bandwidth = 32 Hz */
+	status += BMI088_WriteGyrRegister(imu, BMI_GYR_BANDWIDTH, 0x03); /* ODR = 400 Hz, Filter bandwidth = 47 Hz */
 	HAL_Delay(10);
 
 	/* Enable gyroscope data ready interrupt */
@@ -116,8 +116,8 @@ uint8_t BMI088_Init(BMI088 *imu,
 	status += BMI088_WriteGyrRegister(imu, BMI_INT3_INT4_IO_MAP, 0x01); /* Data ready interrupt mapped to INT3 pin */
 	HAL_Delay(10);
 
-	/* Pre-compute gyroscope conversion constant (raw to rad/s) */
-	imu->gyrConversion = 0.01745329251f * 1000.0f / 32768.0f; /* Datasheet page 39 */
+	/* Pre-compute gyroscope conversion constant (raw to deg/s) */
+	imu->gyrConversion = 2000.0f / 32768.0f; /* Datasheet page 39 */
 
 	/* Set gyroscope TX buffer for DMA */
 	imu->gyrTxBuf[0] = BMI_GYR_DATA | 0x80;
