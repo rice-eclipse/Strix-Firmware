@@ -46,8 +46,8 @@ uint8_t KX134_Init(KX134 *imu,
 	/* turn off device to enable changes to configuration */
 	status += KX134_WriteRegister(imu, KX_CNTL_1, 0x68); // everything is correct except for bit 7 (1st), which is 0 instead of 1
 
-	/* set output data rate to 1.6kHz, disable IIR filter */
-	status += KX134_WriteRegister(imu, KX_ODCNTL, 0x8B);
+	/* set output data rate to 400Hz, disable IIR filter */
+	status += KX134_WriteRegister(imu, KX_ODCNTL, 0x89);
 
 	/* interrupt control */
 	status += KX134_WriteRegister(imu, KX_INC1, 0xA8); // set interrupt to real time non-latched, enable pin 1, active high
@@ -125,6 +125,11 @@ uint8_t KX134_Read(KX134 *imu) {
 	uint8_t status = (HAL_SPI_TransmitReceive(imu->spiHandle, txBuf, rxBuf, 7, HAL_MAX_DELAY) == HAL_OK);
 	HAL_GPIO_WritePin(imu->csPinBank, imu->csPin, GPIO_PIN_SET);
 
+	//write data into data array
+	for (uint8_t i = 0; i < 6; i++) {
+		imu->data[i] = rxBuf[i+1];
+	}
+
 	/* Form signed 16-bit integers */
 	int16_t accX = (int16_t) ((rxBuf[2] << 8) | rxBuf[1]);
 	int16_t accY = (int16_t) ((rxBuf[4] << 8) | rxBuf[3]);
@@ -134,6 +139,7 @@ uint8_t KX134_Read(KX134 *imu) {
 	imu->acc_mps2[0] = imu->accConversion * accX;
 	imu->acc_mps2[1] = imu->accConversion * accY;
 	imu->acc_mps2[2] = imu->accConversion * accZ;
+
 
 	return status;
 

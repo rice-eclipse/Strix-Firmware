@@ -196,6 +196,11 @@ uint8_t BMP388_Read(BMP388 *alt) {
 	uint32_t uncomp_pressure = (uint32_t) ((rxBuf[3] << 16) | (rxBuf[2] << 8) | rxBuf[1]);
 	uint32_t uncomp_temperature = (uint32_t) ((rxBuf[6] << 16) | (rxBuf[5] << 8) | rxBuf[4]);
 
+	//copy the raw data into the data stream
+	for (uint8_t i = 0; i < 6; i++) {
+		alt->data[i] = rxBuf[i+1];
+	}
+
 	/* use the provided conversion functions to get the actual values */
 	alt->temperature = BMP388_CompensateTemperature(uncomp_temperature, alt);
 	alt->pressure = BMP388_CompensatePressure(uncomp_pressure, alt);

@@ -4,8 +4,8 @@
 ../Core/Src/Drivers/BMI088.c:175:9:BMI088_WriteAccRegister	24	static
 ../Core/Src/Drivers/BMI088.c:188:9:BMI088_WriteGyrRegister	24	static
 ../Core/Src/Drivers/BMI088.c:208:9:BMI088_ReadAccelerometer	48	static
-../Core/Src/Drivers/BMI088.c:232:9:BMI088_ReadGyroscope	48	static
-../Core/Src/Drivers/BMI088.c:261:9:BMI088_ReadAccelerometerDMA	16	static
-../Core/Src/Drivers/BMI088.c:278:6:BMI088_ReadAccelerometerDMA_Complete	24	static
-../Core/Src/Drivers/BMI088.c:295:9:BMI088_ReadGyroscopeDMA	16	static
-../Core/Src/Drivers/BMI088.c:312:6:BMI088_ReadGyroscopeDMA_Complete	24	static
+../Core/Src/Drivers/BMI088.c:237:9:BMI088_ReadGyroscope	48	static
+../Core/Src/Drivers/BMI088.c:271:9:BMI088_ReadAccelerometerDMA	16	static
+../Core/Src/Drivers/BMI088.c:288:6:BMI088_ReadAccelerometerDMA_Complete	24	static
+../Core/Src/Drivers/BMI088.c:305:9:BMI088_ReadGyroscopeDMA	16	static
+../Core/Src/Drivers/BMI088.c:322:6:BMI088_ReadGyroscopeDMA_Complete	24	static

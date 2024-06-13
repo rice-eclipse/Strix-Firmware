@@ -58,7 +58,7 @@ void MX_GPIO_Init(void)
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOE, Pyro_B_Trigger_Pin|Pyro_C_Trigger_Pin|Pyro_D_Trigger_Pin|Pyro_E_Trigger_Pin
-                          |Pyro_F_Trigger_Pin|BMP388_NCS_Pin, GPIO_PIN_RESET);
+                          |Pyro_F_Trigger_Pin|Buzzer_Pin|BMP388_NCS_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOD, Continuity_LED_B_Pin|Continuity_LED_A_Pin|Continuity_LED_E_Pin|Continuity_LED_F_Pin
@@ -77,9 +77,9 @@ void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PEPin PEPin PEPin PEPin
-                           PEPin PEPin */
+                           PEPin PEPin PEPin */
   GPIO_InitStruct.Pin = Pyro_B_Trigger_Pin|Pyro_C_Trigger_Pin|Pyro_D_Trigger_Pin|Pyro_E_Trigger_Pin
-                          |Pyro_F_Trigger_Pin|BMP388_NCS_Pin;
+                          |Pyro_F_Trigger_Pin|Buzzer_Pin|BMP388_NCS_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;

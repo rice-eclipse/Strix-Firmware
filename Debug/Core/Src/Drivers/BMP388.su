@@ -5,5 +5,5 @@
 ../Core/Src/Drivers/BMP388.c:128:7:BMP388_CompensateTemperature	24	static
 ../Core/Src/Drivers/BMP388.c:145:7:BMP388_CompensatePressure	48	static
 ../Core/Src/Drivers/BMP388.c:184:9:BMP388_Read	56	static
-../Core/Src/Drivers/BMP388.c:211:9:BMP388_ReadDMA	16	static
-../Core/Src/Drivers/BMP388.c:231:6:BMP388_ReadDMA_Complete	24	static
+../Core/Src/Drivers/BMP388.c:216:9:BMP388_ReadDMA	16	static
+../Core/Src/Drivers/BMP388.c:236:6:BMP388_ReadDMA_Complete	24	static

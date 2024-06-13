@@ -36,6 +36,8 @@ typedef struct {
 	float pressure;
 	float temperature;
 
+	uint8_t data[6];
+
 	/* Temperature coefficients */
 	uint16_t par_t1;
 	uint16_t par_t2;

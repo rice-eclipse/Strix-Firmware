@@ -138,7 +138,6 @@ void HAL_QSPI_MspDeInit(QSPI_HandleTypeDef* qspiHandle)
   }
 }
 
-
 /* USER CODE BEGIN 1 */
 /* QUADSPI init function */
 uint8_t CSP_QUADSPI_Init(void) {
@@ -554,38 +553,6 @@ uint8_t CSP_QSPI_WriteMemory(uint8_t *buffer, uint32_t address,
 //	}
 //	return HAL_OK;
 //}
-
-uint8_t CSP_QSPI_EnableMemoryMappedMode(void) {
-
-	QSPI_CommandTypeDef sCommand;
-	QSPI_MemoryMappedTypeDef sMemMappedCfg;
-
-	/* Enable Memory-Mapped mode-------------------------------------------------- */
-
-	sCommand.InstructionMode = QSPI_INSTRUCTION_1_LINE;
-	sCommand.Instruction = QUAD_IN_OUT_FAST_READ_CMD;
-	sCommand.AddressSize = QSPI_ADDRESS_24_BITS;
-	sCommand.AddressMode = QSPI_ADDRESS_4_LINES;
-	sCommand.Address = 0;
-	sCommand.AlternateByteMode = QSPI_ALTERNATE_BYTES_4_LINES;
-	sCommand.AlternateBytes = 0xFF;
-	sCommand.AlternateBytesSize = 1;
-	sCommand.DdrMode = QSPI_DDR_MODE_DISABLE;
-	sCommand.DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
-	sCommand.SIOOMode = QSPI_SIOO_INST_EVERY_CMD;
-	sCommand.DataMode = QSPI_DATA_4_LINES;
-	sCommand.NbData = 0;
-	sCommand.DummyCycles = 4;
-
-	sMemMappedCfg.TimeOutActivation = QSPI_TIMEOUT_COUNTER_DISABLE;
-	sMemMappedCfg.TimeOutPeriod = 0;
-
-	if (HAL_QSPI_MemoryMapped(&hqspi, &sCommand, &sMemMappedCfg) != HAL_OK) {
-		return HAL_ERROR;
-	}
-	HAL_Delay(100);
-	return HAL_OK;
-}
 
 uint8_t QSPI_ResetChip() {
 	QSPI_CommandTypeDef sCommand = { 0 };

@@ -42,6 +42,8 @@ typedef struct {
 	/* x-y-z measurements */
 	float acc_mps2[3];
 
+	uint8_t data[6];
+
 } KX134;
 
 /*

@@ -1,6 +1,6 @@
 ../Core/Src/Drivers/KX134.c:16:9:KX134_Init	3
 ../Core/Src/Drivers/KX134.c:81:9:KX134_ReadRegister	2
 ../Core/Src/Drivers/KX134.c:98:9:KX134_WriteRegister	2
-../Core/Src/Drivers/KX134.c:118:9:KX134_Read	1
-../Core/Src/Drivers/KX134.c:147:9:KX134_ReadDMA	2
-../Core/Src/Drivers/KX134.c:164:6:KX134_ReadDMA_Complete	1
+../Core/Src/Drivers/KX134.c:118:9:KX134_Read	2
+../Core/Src/Drivers/KX134.c:153:9:KX134_ReadDMA	2
+../Core/Src/Drivers/KX134.c:170:6:KX134_ReadDMA_Complete	1

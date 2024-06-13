@@ -2,5 +2,5 @@
 ../Core/Src/Drivers/KX134.c:81:9:KX134_ReadRegister	64	static
 ../Core/Src/Drivers/KX134.c:98:9:KX134_WriteRegister	24	static
 ../Core/Src/Drivers/KX134.c:118:9:KX134_Read	48	static
-../Core/Src/Drivers/KX134.c:147:9:KX134_ReadDMA	16	static
-../Core/Src/Drivers/KX134.c:164:6:KX134_ReadDMA_Complete	24	static
+../Core/Src/Drivers/KX134.c:153:9:KX134_ReadDMA	16	static
+../Core/Src/Drivers/KX134.c:170:6:KX134_ReadDMA_Complete	24	static

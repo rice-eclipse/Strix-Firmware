@@ -32,6 +32,8 @@ typedef struct {
 	/* x-y-z measurements */
 	float mag[3];
 
+	uint8_t data[6];
+
 } LIS3MDL;
 
 /*

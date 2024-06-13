@@ -103,7 +103,7 @@ uint8_t BMI088_Init(BMI088 *imu,
 	status += BMI088_WriteGyrRegister(imu, BMI_GYR_RANGE, 0x00); /* +- 2000 deg/s */
 	HAL_Delay(10);
 
-	status += BMI088_WriteGyrRegister(imu, BMI_GYR_BANDWIDTH, 0x03); /* ODR = 400 Hz, Filter bandwidth = 47 Hz */
+	status += BMI088_WriteGyrRegister(imu, BMI_GYR_BANDWIDTH, 0x02); /* ODR = 1000 Hz */
 	HAL_Delay(10);
 
 	/* Enable gyroscope data ready interrupt */
@@ -225,6 +225,11 @@ uint8_t BMI088_ReadAccelerometer(BMI088 *imu) {
 	imu->acc_mps2[1] = imu->accConversion * accY;
 	imu->acc_mps2[2] = imu->accConversion * accZ;
 
+	/* copy the raw data to the structure */
+	for (uint8_t i = 2; i < 8; i++) {
+		imu->acc_data[i] = rxBuf[i];
+	}
+
 	return status;
 
 }
@@ -248,6 +253,11 @@ uint8_t BMI088_ReadGyroscope(BMI088 *imu) {
 	imu->gyr_rps[0] = imu->gyrConversion * gyrX;
 	imu->gyr_rps[1] = imu->gyrConversion * gyrY;
 	imu->gyr_rps[2] = imu->gyrConversion * gyrZ;
+
+	/* copy the raw data to the structure */
+	for (uint8_t i = 1; i < 7; i++) {
+		imu->gyr_data[i] = rxBuf[i];
+	}
 
 	return status;
 

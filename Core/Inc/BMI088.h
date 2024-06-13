@@ -52,6 +52,10 @@ typedef struct {
 	float acc_mps2[3];
 	float gyr_rps[3];
 
+	/* raw data */
+	uint8_t acc_data[6];
+	uint8_t gyr_data[6];
+
 } BMI088;
 
 /*

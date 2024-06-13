@@ -69,6 +69,8 @@ void Error_Handler(void);
 #define Pyro_E_Trigger_GPIO_Port GPIOE
 #define Pyro_F_Trigger_Pin GPIO_PIN_13
 #define Pyro_F_Trigger_GPIO_Port GPIOE
+#define Buzzer_Pin GPIO_PIN_15
+#define Buzzer_GPIO_Port GPIOE
 #define Continuity_LED_D_Pin GPIO_PIN_14
 #define Continuity_LED_D_GPIO_Port GPIOB
 #define Continuity_LED_C_Pin GPIO_PIN_15

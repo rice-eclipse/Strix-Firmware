@@ -111,6 +111,11 @@ uint8_t LIS3MDL_Read(LIS3MDL *mag) {
 	uint8_t status = (HAL_SPI_TransmitReceive(mag->spiHandle, txBuf, rxBuf, 7, HAL_MAX_DELAY) == HAL_OK);
 	HAL_GPIO_WritePin(mag->csPinBank, mag->csPin, GPIO_PIN_SET);
 
+	//write data into data array
+	for (uint8_t i = 0; i < 6; i++) {
+		mag->data[i] = rxBuf[i+1];
+	}
+
 	/* get the raw data */
 	uint16_t x_gauss = (rxBuf[2] << 8) + rxBuf[1];
 	uint16_t y_gauss = (rxBuf[4] << 8) + rxBuf[3];
